@@ -8,7 +8,18 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Load MediaPipe before our app -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
+    <script>
+      // Log MediaPipe loading status
+      window.addEventListener('load', function() {
+        console.log('Window loaded. MediaPipe available:', typeof window.SelfieSegmentation !== 'undefined');
+        if (window.mediapipe) {
+          console.log('MediaPipe modules:', Object.keys(window.mediapipe));
+        }
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
