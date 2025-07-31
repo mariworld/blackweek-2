@@ -7,6 +7,7 @@ import { DownloadButton } from './components/DownloadButton';
 import { ImageProcessingService } from './services/imageProcessing';
 import { ProcessedImage } from './types';
 import posterImage from './assets/no-emoji-BW_poster2.jpg';
+import { config } from './config';
 
 function App() {
   const [processedHeadshot, setProcessedHeadshot] = useState<ProcessedImage | null>(null);
@@ -15,9 +16,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<Canvas | null>(null);
 
-  // Initialize image processing service
-  // Note: Replace with actual Replicate API key for production
-  const imageProcessor = useRef(new ImageProcessingService());
+  // Initialize image processing service with API key from config
+  const imageProcessor = useRef(new ImageProcessingService(config.REPLICATE_API_KEY));
 
   const handleImageSelect = async (imageDataUrl: string) => {
     setIsProcessing(true);
@@ -64,6 +64,11 @@ function App() {
           <p className="text-sm sm:text-lg text-gray-400 uppercase tracking-wider">
             Poster Customizer
           </p>
+          {!config.REPLICATE_API_KEY && (
+            <p className="text-xs text-yellow-500 mt-2">
+              Using local sketch filter (Replicate API key not configured)
+            </p>
+          )}
         </header>
 
         {error && (

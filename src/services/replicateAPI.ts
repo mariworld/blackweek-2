@@ -1,48 +1,112 @@
-import Replicate from 'replicate';
-
 export class ReplicateService {
-  private replicate: Replicate;
+  private apiKey: string;
+  private backendUrl: string = 'http://localhost:3001';
 
-  constructor(apiToken: string) {
-    this.replicate = new Replicate({
-      auth: apiToken,
-    });
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
   }
 
   async cartoonifyImage(imageDataUrl: string): Promise<string> {
     try {
-      // Using a cartoon/sketch style model
-      const output = await this.replicate.run(
-        "tencentarc/photomaker-style:467d062309da518648ba89d226490e02b8ed09b5abc15026e54e31c5a8cd0769",
-        {
-          input: {
-            input_image: imageDataUrl,
-            style_name: "Comic book",
-            style_strength: 0.8,
-            negative_prompt: "realistic, photo, 3d render",
+      if (!this.apiKey) {
+        console.warn('No Replicate API key provided, using fallback');
+        return this.fallbackGrayscale(imageDataUrl);
+      }
+
+      // Get image dimensions to maintain aspect ratio
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imageDataUrl;
+      });
+
+      const aspectRatio = img.width / img.height;
+      const aspectRatioString = aspectRatio > 1 
+        ? `${Math.round(aspectRatio * 16)}:9` 
+        : `9:${Math.round(16 / aspectRatio)}`;
+      
+      // Call our backend endpoint
+      const response = await fetch(`${this.backendUrl}/api/transform-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageDataUrl,
+          aspectRatio: aspectRatioString,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        
+        // Check if fallback is available for memory errors
+        if (response.status === 503 && error.fallbackAvailable) {
+          console.log('Primary model failed due to memory, trying fallback...');
+          
+          // Try the fallback endpoint
+          const fallbackResponse = await fetch(`${this.backendUrl}/api/transform-image-fallback`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageDataUrl,
+              aspectRatio: aspectRatioString,
+            }),
+          });
+
+          if (fallbackResponse.ok) {
+            const fallbackResult = await fallbackResponse.json();
+            console.log('Fallback successful:', fallbackResult);
+            
+            if (!fallbackResult.outputUrl) {
+              throw new Error('No output URL from fallback');
+            }
+            
+            return fallbackResult.outputUrl;
+          } else {
+            const fallbackError = await fallbackResponse.json();
+            console.error('Fallback also failed:', fallbackError);
+            
+            // Show user-friendly error with suggestion
+            throw new Error(
+              'Image processing failed due to high server load. ' +
+              'Please try with a smaller image (max 1024x1024) or try again later.'
+            );
           }
         }
-      );
-
-      // The output might be an array or a single URL
-      const resultUrl = Array.isArray(output) ? output[0] : output;
-      
-      // Convert to base64 if needed
-      if (typeof resultUrl === 'string' && resultUrl.startsWith('http')) {
-        const response = await fetch(resultUrl);
-        const blob = await response.blob();
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
+        
+        // For other errors, throw with details
+        throw new Error(error.details || error.error || 'Backend API error');
       }
+
+      const result = await response.json();
+      console.log('Backend response:', result);
       
-      return resultUrl as string;
+      if (!result.outputUrl) {
+        throw new Error('No output URL from backend');
+      }
+
+      // The backend returns a URL, we need to return it as-is
+      // The imageProcessing service will handle converting it to base64
+      console.log('Returning output URL:', result.outputUrl);
+      return result.outputUrl;
+      
     } catch (error) {
       console.error('Error in cartoonify:', error);
-      // Fallback to grayscale conversion if API fails
+      
+      // Check if it's a memory-related error
+      if (error instanceof Error && 
+          (error.message.includes('memory') || 
+           error.message.includes('server load'))) {
+        // Re-throw to let the UI handle it appropriately
+        throw error;
+      }
+      
+      // For other errors, fallback to grayscale conversion
+      console.log('Falling back to client-side grayscale conversion');
       return this.fallbackGrayscale(imageDataUrl);
     }
   }
@@ -57,9 +121,32 @@ export class ReplicateService {
         canvas.width = img.width;
         canvas.height = img.height;
         
-        // Draw grayscale version
-        ctx.filter = 'grayscale(100%) contrast(1.2)';
+        // Create a high contrast black and white sketch effect
+        // First pass: Draw with high contrast
+        ctx.filter = 'grayscale(100%) contrast(200%) brightness(100%)';
         ctx.drawImage(img, 0, 0);
+        
+        // Get image data for edge detection
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        // Apply threshold to create sketch-like effect
+        const threshold = 128;
+        for (let i = 0; i < data.length; i += 4) {
+          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          // Create stark black/white contrast
+          const value = avg > threshold ? 255 : avg < threshold * 0.3 ? 0 : avg;
+          data[i] = value;
+          data[i + 1] = value;
+          data[i + 2] = value;
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+        
+        // Apply additional filter for sketch effect
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.filter = 'blur(0.5px) contrast(110%)';
+        ctx.drawImage(canvas, 0, 0);
         
         resolve(canvas.toDataURL('image/png'));
       };

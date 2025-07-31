@@ -17,15 +17,32 @@ npm install
    // Remove or comment out the placeholder import
    ```
 
-3. (Optional) Add Replicate API key for AI stylization:
-   - Update `src/App.tsx` to pass your API key:
-   ```typescript
-   const imageProcessor = useRef(new ImageProcessingService('your-replicate-api-key'));
+3. Add Replicate API key for AI stylization:
+   - Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
    ```
+   - Edit `.env` and add your Replicate API key:
+   ```
+   VITE_REPLICATE_API_KEY=your_replicate_api_key_here
+   ```
+   - Get your API key from: https://replicate.com/account/api-tokens
 
-4. Run the development server:
+4. Install backend dependencies:
 ```bash
+cd backend && npm install && cd ..
+```
+
+5. Run both frontend and backend:
+```bash
+# In one terminal, start the backend:
+npm run dev:backend
+
+# In another terminal, start the frontend:
 npm run dev
+
+# Or run both with one command:
+npm run dev:all
 ```
 
 ## Features

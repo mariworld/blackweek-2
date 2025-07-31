@@ -124,7 +124,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
     // Add all selected emojis
     emojis.forEach((emoji, index) => {
       const emojiText = new FabricText(emoji, {
-        left: (350 + (index % 2) * 150) * scale,
+        left: (500 + (index % 2) * 150) * scale,
         top: (300 + Math.floor(index / 2) * 120) * scale,
         fontSize: 100 * scale,
         fontFamily: 'Arial',
