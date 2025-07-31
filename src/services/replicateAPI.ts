@@ -9,38 +9,21 @@ export class ReplicateService {
   }
 
   private getBackendUrl(): string {
-    // Check if we have an environment variable for backend URL
-    if (import.meta.env.VITE_BACKEND_URL) {
-      return import.meta.env.VITE_BACKEND_URL;
-    }
-    
+    // Check if we're running on a mobile device or different host
     const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
     
     // If accessing from localhost, use localhost backend
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:3001';
     }
     
-    // For Vercel deployment, use relative API routes
-    if (hostname.includes('vercel.app') || import.meta.env.PROD) {
-      return ''; // Use relative paths for API routes
-    }
-    
-    // For local network (192.168.x.x), use HTTP
-    if (hostname.startsWith('192.168.') || hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-      return `http://${hostname}:3001`;
-    }
-    
-    // For other production domains, match the protocol
-    return `${protocol}//${hostname}:3001`;
+    // For mobile/network access, use the same host as the frontend
+    // This assumes backend runs on port 3001 on the same machine
+    return `http://${hostname}:3001`;
   }
 
   async cartoonifyImage(imageDataUrl: string, seed?: number): Promise<string> {
     try {
-      console.log('Backend URL:', this.backendUrl);
-      console.log('API Key available:', !!this.apiKey);
-      
       if (!this.apiKey) {
         console.warn('No Replicate API key provided, using fallback');
         return this.fallbackGrayscale(imageDataUrl);
@@ -58,8 +41,6 @@ export class ReplicateService {
       const aspectRatioString = aspectRatio > 1 
         ? `${Math.round(aspectRatio * 16)}:9` 
         : `9:${Math.round(16 / aspectRatio)}`;
-      
-      console.log('Calling backend API:', `${this.backendUrl}/api/transform-image`);
       
       // Call our backend endpoint
       const response = await fetch(`${this.backendUrl}/api/transform-image`, {
@@ -132,15 +113,6 @@ export class ReplicateService {
       
     } catch (error) {
       console.error('Error in cartoonify:', error);
-      
-      // Log more details for debugging
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.error('Network error - possible causes:');
-        console.error('1. Backend server is not running');
-        console.error('2. CORS issue');
-        console.error('3. Mixed content (HTTPS/HTTP) issue');
-        console.error('4. Backend URL is incorrect:', this.backendUrl);
-      }
       
       // Check if it's a memory-related error
       if (error instanceof Error && 
