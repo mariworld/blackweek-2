@@ -8,6 +8,7 @@ interface PosterPreviewProps {
   emojis: string[];
   canvasRef: React.MutableRefObject<Canvas | null>;
   imageScale?: number;
+  removeBackground?: boolean | null;
 }
 
 export const PosterPreview: React.FC<PosterPreviewProps> = ({
@@ -16,10 +17,23 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
   emojis,
   canvasRef,
   imageScale = 1.0,
+  removeBackground,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fabricCanvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 1066 });
+  const [showDragHint, setShowDragHint] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  // Auto-hide drag hint after 5 seconds
+  useEffect(() => {
+    if (showDragHint && (headshot || emojis.length > 0)) {
+      const timer = setTimeout(() => {
+        setShowDragHint(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showDragHint, headshot, emojis]);
 
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -72,6 +86,24 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
     };
   }, [posterImage, canvasRef, canvasSize]);
 
+  // Track user interactions in a separate effect
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const handleObjectMoving = () => {
+      if (!hasInteracted) {
+        setHasInteracted(true);
+        setShowDragHint(false);
+      }
+    };
+
+    canvasRef.current.on('object:moving', handleObjectMoving);
+
+    return () => {
+      canvasRef.current?.off('object:moving', handleObjectMoving);
+    };
+  }, [hasInteracted]);
+
   useEffect(() => {
     if (!canvasRef.current || !headshot) return;
 
@@ -105,11 +137,18 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
         lockRotation: true,
         lockScalingX: true,
         lockScalingY: true,
+        stroke: removeBackground === false ? 'black' : undefined,
+        strokeWidth: removeBackground === false ? 2 : 0,
+        borderColor: '#60A5FA',
+        borderScaleFactor: 2,
+        cornerColor: '#60A5FA',
+        cornerSize: 8,
+        transparentCorners: false,
       });
       
       canvasRef.current?.add(img);
     });
-  }, [headshot, canvasRef, canvasSize, imageScale]);
+  }, [headshot, canvasRef, canvasSize, imageScale, removeBackground]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -147,6 +186,11 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
           lockRotation: true,
           lockScalingX: true,
           lockScalingY: true,
+          borderColor: '#60A5FA',
+          borderScaleFactor: 2,
+          cornerColor: '#60A5FA',
+          cornerSize: 8,
+          transparentCorners: false,
         });
         
         canvasRef.current?.add(emojiText);
@@ -163,18 +207,59 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
   }, [emojis, canvasRef, canvasSize]);
 
   return (
-    <div ref={containerRef} className="bg-black/50 rounded-lg p-4 shadow-inner">
-      <div className="flex justify-center">
+    <div ref={containerRef} className="bg-black/50 rounded-lg p-4 shadow-inner relative">
+      {/* Animated hint overlay */}
+      {showDragHint && (headshot || emojis.length > 0) && (
+        <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+          <div className="bg-black/80 rounded-lg p-6 max-w-sm mx-4 animate-pulse">
+            <div className="text-center">
+              <div className="text-4xl mb-3">👆</div>
+              <h3 className="text-white font-bold text-lg mb-2">Drag & Drop to Customize!</h3>
+              <p className="text-gray-300 text-sm">
+                Click and drag your photo and emojis to position them exactly where you want on the poster
+              </p>
+              <p className="text-gray-400 text-xs mt-2">
+                This message will disappear once you start dragging
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex justify-center relative">
         <canvas 
           ref={fabricCanvasRef} 
           className="max-w-full h-auto shadow-xl rounded"
           style={{ maxHeight: '70vh' }}
         />
       </div>
+      
       {(headshot || emojis.length > 0) && (
-        <p className="text-sm text-gray-400 mt-3 text-center">
-          Click and drag elements to reposition them
-        </p>
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <span className="text-2xl">💡</span>
+            <p className="text-white font-medium">
+              Pro tip: Drag elements to reposition them on your poster!
+            </p>
+          </div>
+          
+          {!hasInteracted && (
+            <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mx-auto max-w-md">
+              <div className="flex items-start gap-2">
+                <span className="text-blue-400 text-lg">ℹ️</span>
+                <div className="text-xs text-blue-200">
+                  <p className="font-semibold mb-1">How to customize your poster:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>Click on any photo or emoji</li>
+                    <li>Drag it to your desired position</li>
+                    <li>Release to place it there</li>
+                    <li>You can reposition elements as many times as you want!</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

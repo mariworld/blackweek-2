@@ -6,7 +6,7 @@ import { PosterPreview } from './components/PosterPreview';
 import { DownloadButton } from './components/DownloadButton';
 import { ImageProcessingService } from './services/imageProcessing';
 import type { ProcessedImage } from './types';
-import posterImage from './assets/no-emoji-BW_poster2.jpg';
+import posterImage from './assets/no-emoji-BW_poster3.png';
 import blackweekLogo from './assets/blackweek-logo.svg';
 import { config } from './config';
 
@@ -20,6 +20,7 @@ function App() {
   const [imageScale, setImageScale] = useState(1.0);
   const [showBackgroundTip, setShowBackgroundTip] = useState(false);
   const [uploadStep, setUploadStep] = useState<'select-mode' | 'upload' | 'confirm' | 'processed'>('select-mode');
+  const [showRegenerateTip, setShowRegenerateTip] = useState(false);
   const canvasRef = useRef<Canvas | null>(null);
 
   // Initialize image processing service with API key from config
@@ -236,14 +237,33 @@ function App() {
                     <p className="text-sm text-green-400 font-semibold">
                       ✓ Portrait ready!
                     </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleRegenerate}
-                        disabled={isProcessing}
-                        className="text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
-                      >
-                        Regenerate
-                      </button>
+                    <div className="flex gap-2 items-center">
+                      <div className="relative">
+                        <button
+                          onClick={handleRegenerate}
+                          disabled={isProcessing}
+                          onMouseEnter={() => setShowRegenerateTip(true)}
+                          onMouseLeave={() => setShowRegenerateTip(false)}
+                          className="text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 flex items-center gap-1"
+                        >
+                          <span>🔄</span> Regenerate
+                        </button>
+                        
+                        {showRegenerateTip && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50">
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 border-r border-b border-gray-700 rotate-45"></div>
+                            <p className="text-xs text-gray-300 leading-relaxed">
+                              <span className="font-semibold text-white">Tip:</span> If your portrait appears too dark or unclear, try:
+                            </p>
+                            <ul className="text-xs text-gray-400 mt-1 space-y-1 ml-3">
+                              <li>• Regenerating for a different style</li>
+                              <li>• Using a photo with better lighting</li>
+                              <li>• Choosing a photo with higher contrast</li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                      
                       <button
                         onClick={() => {
                           setOriginalImage(null);
@@ -328,6 +348,7 @@ function App() {
               emojis={selectedEmojis}
               canvasRef={canvasRef}
               imageScale={imageScale}
+              removeBackground={removeBackground}
             />
           </div>
         </div>
