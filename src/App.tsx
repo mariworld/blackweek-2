@@ -83,6 +83,13 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white font-suisse">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Mobile disclaimer */}
+        <div className="sm:hidden mb-4 p-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
+          <p className="text-xs text-yellow-200 text-center leading-relaxed">
+            📱 For the best experience, please use this app on a desktop computer. This tool was designed for desktop use.
+          </p>
+        </div>
+        
         <header className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img 
