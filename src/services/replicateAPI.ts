@@ -9,7 +9,11 @@ export class ReplicateService {
   }
 
   private getBackendUrl(): string {
-    // Check if we're running on a mobile device or different host
+    // Check if we have an environment variable for backend URL
+    if (import.meta.env.VITE_BACKEND_URL) {
+      return import.meta.env.VITE_BACKEND_URL;
+    }
+    
     const hostname = window.location.hostname;
     
     // If accessing from localhost, use localhost backend
@@ -17,9 +21,18 @@ export class ReplicateService {
       return 'http://localhost:3001';
     }
     
-    // For mobile/network access, use the same host as the frontend
-    // This assumes backend runs on port 3001 on the same machine
-    return `http://${hostname}:3001`;
+    // For Vercel deployment or production, use relative API routes
+    if (hostname.includes('vercel.app') || hostname.includes('blackweek') || import.meta.env.PROD) {
+      return ''; // Use relative paths for API routes
+    }
+    
+    // For local network (192.168.x.x), use HTTP
+    if (hostname.startsWith('192.168.') || hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+      return `http://${hostname}:3001`;
+    }
+    
+    // Default to relative paths for any other production domain
+    return '';
   }
 
   async cartoonifyImage(imageDataUrl: string, seed?: number): Promise<string> {
