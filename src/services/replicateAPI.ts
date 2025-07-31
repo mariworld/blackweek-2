@@ -1,9 +1,25 @@
 export class ReplicateService {
   private apiKey: string;
-  private backendUrl: string = 'http://localhost:3001';
+  private backendUrl: string;
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
+    // Use dynamic backend URL based on environment
+    this.backendUrl = this.getBackendUrl();
+  }
+
+  private getBackendUrl(): string {
+    // Check if we're running on a mobile device or different host
+    const hostname = window.location.hostname;
+    
+    // If accessing from localhost, use localhost backend
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3001';
+    }
+    
+    // For mobile/network access, use the same host as the frontend
+    // This assumes backend runs on port 3001 on the same machine
+    return `http://${hostname}:3001`;
   }
 
   async cartoonifyImage(imageDataUrl: string, seed?: number): Promise<string> {
