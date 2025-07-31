@@ -124,9 +124,13 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       const targetWidth = 200 * scale * imageScale;
       const imgScale = targetWidth / (img.width || 1);
       
+      // Center the image on the canvas and move it up by 125 units
+      const centerX = (canvasSize.width / 2) - ((img.width || 0) * imgScale / 2);
+      const centerY = (canvasSize.height / 2) - ((img.height || 0) * imgScale / 2) - (125 * scale);
+      
       img.set({
-        left: 250 * scale,
-        top: 200 * scale,
+        left: centerX,
+        top: centerY,
         scaleX: imgScale,
         scaleY: imgScale,
         data: { type: 'headshot' },
@@ -170,13 +174,25 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
     // Scale factor for responsive sizing
     const scale = canvasSize.width / 800;
 
+    // Define preset positions for up to 5 emojis
+    const presetPositions = [
+      { left: 170, top: 760 },  // 1st emoji: bottom left
+      { left: 625, top: 300 },  // 2nd emoji: mid right
+      { left: 560, top: 360 },  // 3rd emoji: mid right
+      { left: 525, top: 450 },  // 4th emoji: mid right
+      { left: 650, top: 450 },  // 5th emoji: mid right
+    ];
+
     // Add only new emojis
     emojis.forEach((emoji, index) => {
-      if (!existingMap.has(index)) {
+      if (!existingMap.has(index) && index < 5) {
+        const position = presetPositions[index];
+        // First emoji is larger (100), emojis 2-5 are smaller (60)
+        const emojiSize = index === 0 ? 150 : 60;
         const emojiText = new FabricText(emoji, {
-          left: (500 + (index % 2) * 150) * scale,
-          top: (300 + Math.floor(index / 2) * 120) * scale,
-          fontSize: 100 * scale,
+          left: position.left * scale,
+          top: position.top * scale,
+          fontSize: emojiSize * scale,
           fontFamily: 'Arial',
           data: { type: 'emoji', index },
           selectable: true,

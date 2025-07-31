@@ -60,7 +60,9 @@ function App() {
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    setSelectedEmojis([...selectedEmojis, emoji]);
+    if (selectedEmojis.length < 5) {
+      setSelectedEmojis([...selectedEmojis, emoji]);
+    }
   };
 
   const removeEmoji = (index: number) => {
@@ -286,30 +288,13 @@ function App() {
                     </div>
                   </div>
                   
-                  <div>
-                    <label className="text-sm text-gray-300 block mb-1">Portrait Size: {(imageScale * 100).toFixed(0)}%</label>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="2.0"
-                      step="0.1"
-                      value={imageScale}
-                      onChange={(e) => setImageScale(parseFloat(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>50%</span>
-                      <span>100%</span>
-                      <span>200%</span>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
 
             <div className="border border-gray-800 rounded-lg shadow-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-white">
-                Step 2: Add Emojis ({selectedEmojis.length})
+                Step 2: Add Emojis ({selectedEmojis.length}/5)
               </h2>
               <EmojiPicker
                 selectedEmojis={selectedEmojis}
@@ -346,9 +331,40 @@ function App() {
           </div>
 
           <div className="border border-gray-800 rounded-lg shadow-xl p-4 sm:p-6">
-            <h2 className="text-xl font-bold mb-4 text-white text-center lg:text-left">
-              Preview
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">
+                Preview
+              </h2>
+              <p className="text-sm text-gray-400 italic">
+                *drag photo and emojis to your desired position*
+              </p>
+            </div>
+            
+            {processedHeadshot && (
+              <div className="mb-4 bg-black/50 rounded-lg p-4 border border-gray-700">
+                <label className="text-sm text-gray-300 block mb-2">
+                  Photo Size: <span className="font-semibold text-white">{(imageScale * 100).toFixed(0)}%</span>
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2.0"
+                  step="0.1"
+                  value={imageScale}
+                  onChange={(e) => setImageScale(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((imageScale - 0.5) / 1.5) * 100}%, #374151 ${((imageScale - 0.5) / 1.5) * 100}%, #374151 100%)`
+                  }}
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>50%</span>
+                  <span>100%</span>
+                  <span>200%</span>
+                </div>
+              </div>
+            )}
+            
             <PosterPreview
               posterImage={posterImage}
               headshot={processedHeadshot}
