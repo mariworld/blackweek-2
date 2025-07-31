@@ -1,12 +1,23 @@
-import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
+declare global {
+  interface Window {
+    SelfieSegmentation: any;
+  }
+}
 
 export class BackgroundRemovalService {
-  private segmenter: SelfieSegmentation;
+  private segmenter: any;
   private isInitialized = false;
 
   constructor() {
+    // Use the global SelfieSegmentation from the CDN
+    const SelfieSegmentation = window.SelfieSegmentation || (window as any).mediapipe?.SelfieSegmentation;
+    
+    if (!SelfieSegmentation) {
+      throw new Error('MediaPipe SelfieSegmentation not loaded');
+    }
+    
     this.segmenter = new SelfieSegmentation({
-      locateFile: (file) => {
+      locateFile: (file: string) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
       },
     });
@@ -37,7 +48,7 @@ export class BackgroundRemovalService {
           canvas.width = img.width;
           canvas.height = img.height;
           
-          this.segmenter.onResults((results) => {
+          this.segmenter.onResults((results: any) => {
             ctx.save();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);

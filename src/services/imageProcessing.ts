@@ -2,13 +2,36 @@ import { BackgroundRemovalService } from './backgroundRemoval';
 import { ReplicateService } from './replicateAPI';
 import type { ProcessedImage } from '../types';
 
+declare global {
+  interface Window {
+    SelfieSegmentation: any;
+  }
+}
+
 export class ImageProcessingService {
-  private backgroundRemoval: BackgroundRemovalService;
+  private backgroundRemoval: BackgroundRemovalService | null = null;
   private replicateService: ReplicateService | null;
 
   constructor(replicateApiKey?: string) {
-    this.backgroundRemoval = new BackgroundRemovalService();
     this.replicateService = replicateApiKey ? new ReplicateService(replicateApiKey) : null;
+  }
+
+  private async getBackgroundRemovalService(): Promise<BackgroundRemovalService> {
+    if (!this.backgroundRemoval) {
+      // Wait for MediaPipe to load
+      let attempts = 0;
+      while (!window.SelfieSegmentation && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      if (!window.SelfieSegmentation) {
+        throw new Error('MediaPipe SelfieSegmentation failed to load');
+      }
+      
+      this.backgroundRemoval = new BackgroundRemovalService();
+    }
+    return this.backgroundRemoval;
   }
 
   /**
@@ -92,7 +115,7 @@ export class ImageProcessingService {
         } catch (error) {
           console.error('Failed to load processed image:', error);
           // Fall back to grayscale if we can't load the URL
-          processedImage = await this.applyGrayscaleFilter(imageDataUrl);
+          processedImage = await this.applyGrayscaleFilter(processedDataUrl);
         }
       }
     } else {
@@ -105,7 +128,8 @@ export class ImageProcessingService {
     if (removeBackground) {
       try {
         console.log('Removing background from processed image...');
-        finalImage = await this.backgroundRemoval.removeBackground(processedImage);
+        const bgRemovalService = await this.getBackgroundRemovalService();
+        finalImage = await bgRemovalService.removeBackground(processedImage);
         console.log('Background removed successfully');
       } catch (error) {
         console.error('Failed to remove background:', error);
