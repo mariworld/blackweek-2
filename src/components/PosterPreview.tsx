@@ -114,33 +114,51 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Remove all existing emojis
-    const existingEmojis = canvasRef.current.getObjects().filter(
+    // Get existing emoji objects
+    const existingEmojiObjects = canvasRef.current.getObjects().filter(
       obj => (obj as any).data?.type === 'emoji'
     );
-    existingEmojis.forEach(emoji => canvasRef.current?.remove(emoji));
+    
+    // Create a map of existing emojis by their index
+    const existingMap = new Map<number, any>();
+    existingEmojiObjects.forEach(obj => {
+      const index = (obj as any).data?.index;
+      if (index !== undefined) {
+        existingMap.set(index, obj);
+      }
+    });
 
     // Scale factor for responsive sizing
     const scale = canvasSize.width / 800;
 
-    // Add all selected emojis
+    // Add only new emojis
     emojis.forEach((emoji, index) => {
-      const emojiText = new FabricText(emoji, {
-        left: (500 + (index % 2) * 150) * scale,
-        top: (300 + Math.floor(index / 2) * 120) * scale,
-        fontSize: 100 * scale,
-        fontFamily: 'Arial',
-        data: { type: 'emoji', index },
-        selectable: true,
-        evented: true,
-        hasControls: false,
-        hasBorders: true,
-        lockRotation: true,
-        lockScalingX: true,
-        lockScalingY: true,
-      });
-      
-      canvasRef.current?.add(emojiText);
+      if (!existingMap.has(index)) {
+        const emojiText = new FabricText(emoji, {
+          left: (500 + (index % 2) * 150) * scale,
+          top: (300 + Math.floor(index / 2) * 120) * scale,
+          fontSize: 100 * scale,
+          fontFamily: 'Arial',
+          data: { type: 'emoji', index },
+          selectable: true,
+          evented: true,
+          hasControls: false,
+          hasBorders: true,
+          lockRotation: true,
+          lockScalingX: true,
+          lockScalingY: true,
+        });
+        
+        canvasRef.current?.add(emojiText);
+      }
+    });
+    
+    // Remove emojis that are no longer in the selection
+    existingEmojiObjects.forEach(obj => {
+      const index = (obj as any).data?.index;
+      if (index === undefined || index >= emojis.length) {
+        canvasRef.current?.remove(obj);
+      }
     });
   }, [emojis, canvasRef, canvasSize]);
 

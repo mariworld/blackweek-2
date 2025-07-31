@@ -16,17 +16,25 @@ function App() {
   const [selectedEmojis, setSelectedEmojis] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [removeBackground, setRemoveBackground] = useState(true);
+  const [removeBackground, setRemoveBackground] = useState<boolean | null>(null);
   const [imageScale, setImageScale] = useState(1.0);
   const [showBackgroundTip, setShowBackgroundTip] = useState(false);
+  const [uploadStep, setUploadStep] = useState<'select-mode' | 'upload' | 'confirm' | 'processed'>('select-mode');
   const canvasRef = useRef<Canvas | null>(null);
 
   // Initialize image processing service with API key from config
   const imageProcessor = useRef(new ImageProcessingService(config.REPLICATE_API_KEY));
 
-  const handleImageSelect = async (imageDataUrl: string) => {
+  const handleImageSelect = (imageDataUrl: string) => {
     setOriginalImage(imageDataUrl);
-    await processImage(imageDataUrl);
+    setUploadStep('confirm');
+  };
+
+  const handleProcessImage = async () => {
+    if (originalImage && removeBackground !== null) {
+      await processImage(originalImage);
+      setUploadStep('processed');
+    }
   };
 
   const processImage = async (imageDataUrl: string, isRegenerate: boolean = false) => {
@@ -34,7 +42,7 @@ function App() {
     setError(null);
     
     try {
-      const processed = await imageProcessor.current.processHeadshot(imageDataUrl, removeBackground, isRegenerate);
+      const processed = await imageProcessor.current.processHeadshot(imageDataUrl, removeBackground ?? false, isRegenerate);
       setProcessedHeadshot(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process image');
@@ -64,6 +72,9 @@ function App() {
     setSelectedEmojis([]);
     setError(null);
     setImageScale(1.0);
+    setRemoveBackground(null);
+    setUploadStep('select-mode');
+    setShowBackgroundTip(false);
   };
 
   const canDownload = processedHeadshot !== null || selectedEmojis.length > 0;
@@ -102,73 +113,128 @@ function App() {
           <div className="space-y-6">
             <div className="border border-gray-800 rounded-lg shadow-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-white">
-                Step 1: Upload Your Headshot
+                Step 1: Create Your Portrait
               </h2>
-              <ImageUpload onImageSelect={handleImageSelect} isProcessing={isProcessing} />
               
-              <div className="mt-4">
-                <div className="relative">
-                  <label className="flex items-center space-x-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={removeBackground}
-                      onChange={(e) => {
-                        setRemoveBackground(e.target.checked);
-                        if (e.target.checked && !showBackgroundTip) {
-                          setShowBackgroundTip(true);
-                        }
-                      }}
-                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
-                      disabled={isProcessing}
-                    />
-                    <span className="text-gray-300 flex items-center gap-1">
-                      Remove background after AI processing
-                      <button
-                        type="button"
-                        onClick={() => setShowBackgroundTip(!showBackgroundTip)}
-                        className="text-gray-400 hover:text-gray-200 ml-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                    </span>
-                  </label>
+              {/* Step 1: Choose Background Mode */}
+              {uploadStep === 'select-mode' && (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-300 mb-4">First, choose how you want your portrait to appear:</p>
                   
-                  {showBackgroundTip && (
-                    <div className="absolute z-10 mt-2 p-4 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-sm">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-sm font-bold text-white">Background Removal Tips</h4>
-                        <button
-                          onClick={() => setShowBackgroundTip(false)}
-                          className="text-gray-400 hover:text-white ml-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="space-y-2 text-xs text-gray-300">
-                        <p>⚠️ <span className="font-semibold">Important:</span> Background removal may accidentally cut parts of your image.</p>
-                        <p>For best results:</p>
-                        <ul className="list-disc list-inside ml-2 space-y-1">
-                          <li>Use a clean, well-lit headshot</li>
-                          <li>Ensure good contrast between you and the background</li>
-                          <li>Avoid busy patterns or similar colors to the background</li>
-                          <li>Center yourself in the frame with some space around</li>
-                        </ul>
-                        <p className="mt-2 text-yellow-400">💡 Tip: If important parts get cut, try disabling background removal and using a plain background instead.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => {
+                        setRemoveBackground(false);
+                        setUploadStep('upload');
+                      }}
+                      className="p-4 border-2 border-gray-700 rounded-lg hover:border-blue-500 transition-all hover:bg-gray-800"
+                    >
+                      <div className="text-3xl mb-2">🖼️</div>
+                      <h3 className="font-bold text-white mb-1">Keep Background</h3>
+                      <p className="text-xs text-gray-400"></p>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setRemoveBackground(true);
+                        setShowBackgroundTip(true);
+                        setUploadStep('upload');
+                      }}
+                      className="p-4 border-2 border-gray-700 rounded-lg hover:border-blue-500 transition-all hover:bg-gray-800"
+                    >
+                      <div className="text-3xl mb-2">✂️</div>
+                      <h3 className="font-bold text-white mb-1">Remove Background</h3>
+                      <p className="text-xs text-gray-400">Works best with simple backgrounds (may not be perfect)</p>
+                    </button>
+                  </div>
+                  
+                  {showBackgroundTip && removeBackground && (
+                    <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <span className="text-yellow-400 text-lg">⚠️</span>
+                        <div className="flex-1 text-sm text-yellow-200">
+                          <p className="font-semibold mb-1">Background Removal Notice:</p>
+                          <p className="text-xs">AI background removal may accidentally cut parts of your image. For best results, use a photo with:</p>
+                          <ul className="list-disc list-inside mt-1 text-xs ml-2">
+                            <li>Good lighting and contrast</li>
+                            <li>Clear separation from background</li>
+                            <li>Simple, uncluttered background</li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
               
-              {processedHeadshot && (
-                <div className="mt-4 space-y-3">
+              {/* Step 2: Upload Image */}
+              {uploadStep === 'upload' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-gray-300">
+                      Mode: <span className="font-semibold text-white">{removeBackground ? 'Remove Background' : 'Keep Background'}</span>
+                    </p>
+                    <button
+                      onClick={() => {
+                        setUploadStep('select-mode');
+                        setShowBackgroundTip(false);
+                      }}
+                      className="text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                      Change mode
+                    </button>
+                  </div>
+                  
+                  <ImageUpload onImageSelect={handleImageSelect} isProcessing={false} />
+                </div>
+              )}
+              
+              {/* Step 3: Confirm and Process */}
+              {uploadStep === 'confirm' && originalImage && (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <img 
+                      src={originalImage} 
+                      alt="Preview" 
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg" />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-300">
+                      Ready to process with: <span className="font-semibold text-white">{removeBackground ? 'Background Removal' : 'Original Background'}</span>
+                    </p>
+                    
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleProcessImage}
+                        disabled={isProcessing}
+                        className="flex-1 px-4 py-2 bg-white hover:bg-gray-200 disabled:bg-gray-700 text-black rounded-lg font-bold transition-colors disabled:opacity-50"
+                      >
+                        {isProcessing ? 'Processing...' : 'Process Image'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setOriginalImage(null);
+                          setUploadStep('upload');
+                        }}
+                        disabled={isProcessing}
+                        className="px-4 py-2 border border-gray-600 hover:bg-gray-800 text-gray-300 rounded-lg transition-colors"
+                      >
+                        Change Photo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Step 4: Processed Result */}
+              {uploadStep === 'processed' && processedHeadshot && (
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-green-400 font-semibold">
-                      ✓ Headshot processed successfully
+                      ✓ Portrait ready!
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -183,16 +249,18 @@ function App() {
                           setOriginalImage(null);
                           setProcessedHeadshot(null);
                           setImageScale(1.0);
+                          setUploadStep('select-mode');
+                          setRemoveBackground(null);
                         }}
                         className="text-sm text-gray-400 hover:text-white transition-colors"
                       >
-                        Change photo
+                        Start Over
                       </button>
                     </div>
                   </div>
                   
                   <div>
-                    <label className="text-sm text-gray-300 block mb-1">Image Scale: {(imageScale * 100).toFixed(0)}%</label>
+                    <label className="text-sm text-gray-300 block mb-1">Portrait Size: {(imageScale * 100).toFixed(0)}%</label>
                     <input
                       type="range"
                       min="0.5"
