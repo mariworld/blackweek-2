@@ -40,12 +40,7 @@ export interface ReplicatePrediction {
   error?: string;
 }
 
-export class CudaMemoryError extends Error {
-  constructor(message: string, public readonly suggestions?: string[]) {
-    super(message);
-    this.name = 'CudaMemoryError';
-  }
-}
+// Removed CudaMemoryError class - not used and incompatible with erasableSyntaxOnly
 
 export interface ImageProcessingError {
   type: 'cuda_memory' | 'api_error' | 'network_error' | 'unknown';

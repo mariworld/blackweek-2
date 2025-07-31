@@ -1,6 +1,6 @@
 import { BackgroundRemovalService } from './backgroundRemoval';
 import { ReplicateService } from './replicateAPI';
-import { ProcessedImage } from '../types';
+import type { ProcessedImage } from '../types';
 
 export class ImageProcessingService {
   private backgroundRemoval: BackgroundRemovalService;
@@ -46,7 +46,7 @@ export class ImageProcessingService {
     });
   }
 
-  async processHeadshot(imageDataUrl: string): Promise<ProcessedImage> {
+  async processHeadshot(imageDataUrl: string, removeBackground: boolean = true, regenerate: boolean = false): Promise<ProcessedImage> {
     // Get original image dimensions
     const img = new Image();
     await new Promise((resolve, reject) => {
@@ -71,13 +71,12 @@ export class ImageProcessingService {
       }
     }
 
-    // Step 1: Skip background removal for now
-    // const noBackgroundImage = await this.backgroundRemoval.removeBackground(imageDataUrl);
-
-    // Step 2: Apply cartoon style (or fallback to grayscale) directly to preprocessed image
+    // Step 1: Apply cartoon style (or fallback to grayscale) first
     let processedImage: string;
     if (this.replicateService) {
-      processedImage = await this.replicateService.cartoonifyImage(processedDataUrl);
+      // Generate random seed for regeneration to get different results
+      const seed = regenerate ? Math.floor(Math.random() * 1000000) : undefined;
+      processedImage = await this.replicateService.cartoonifyImage(processedDataUrl, seed);
       
       // If we get a URL instead of base64, load and convert it
       if (processedImage.startsWith('http')) {
@@ -101,9 +100,25 @@ export class ImageProcessingService {
       processedImage = await this.applyGrayscaleFilter(processedDataUrl);
     }
 
+    // Step 3: Remove background from the processed image if requested
+    let finalImage: string;
+    if (removeBackground) {
+      try {
+        console.log('Removing background from processed image...');
+        finalImage = await this.backgroundRemoval.removeBackground(processedImage);
+        console.log('Background removed successfully');
+      } catch (error) {
+        console.error('Failed to remove background:', error);
+        // Use the processed image without background removal if it fails
+        finalImage = processedImage;
+      }
+    } else {
+      finalImage = processedImage;
+    }
+
     return {
       original: imageDataUrl,
-      processed: processedImage,
+      processed: finalImage,
       width: originalWidth,
       height: originalHeight,
     };

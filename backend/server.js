@@ -121,7 +121,7 @@ app.post('/api/transform-image', async (req, res) => {
   
   async function attemptProcessing() {
     try {
-      const { imageDataUrl, aspectRatio } = req.body;
+      const { imageDataUrl, aspectRatio, seed } = req.body;
 
       if (!imageDataUrl) {
         return res.status(400).json({ error: 'No image provided' });
@@ -145,7 +145,8 @@ app.post('/api/transform-image', async (req, res) => {
         version: "0f1178f5a27e9aa2d2d39c8a43c110f7fa7cbf64062ff04a04cd40899e546065",
         input: {
           prompt: "Make this a greyscale cartoon sketch with silhouette style, remove facial features from headshot and keep everything else",
-          input_image: processedImageData
+          input_image: processedImageData,
+          ...(seed !== undefined && { seed: parseInt(seed) })
         }
       });
 
@@ -230,7 +231,7 @@ app.post('/api/transform-image', async (req, res) => {
 // Fallback endpoint using FLUX Dev (less memory intensive)
 app.post('/api/transform-image-fallback', async (req, res) => {
   try {
-    const { imageDataUrl, aspectRatio } = req.body;
+    const { imageDataUrl, aspectRatio, seed } = req.body;
 
     if (!imageDataUrl) {
       return res.status(400).json({ error: 'No image provided' });
@@ -272,7 +273,8 @@ app.post('/api/transform-image-fallback', async (req, res) => {
         num_inference_steps: 28,
         guidance_scale: 3.5,
         output_format: "jpeg",
-        output_quality: 80
+        output_quality: 80,
+        ...(seed !== undefined && { seed: parseInt(seed) })
       }
     });
 

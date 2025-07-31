@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Canvas, FabricImage, FabricText } from 'fabric';
-import { ProcessedImage } from '../types';
+import type { ProcessedImage } from '../types';
 
 interface PosterPreviewProps {
   posterImage: string;
   headshot: ProcessedImage | null;
   emojis: string[];
   canvasRef: React.MutableRefObject<Canvas | null>;
+  imageScale?: number;
 }
 
 export const PosterPreview: React.FC<PosterPreviewProps> = ({
@@ -14,6 +15,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
   headshot,
   emojis,
   canvasRef,
+  imageScale = 1.0,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fabricCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -85,9 +87,9 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
     FabricImage.fromURL(headshot.processed).then((img) => {
       if (!img) return;
       
-      // Scale proportionally to canvas size
+      // Scale proportionally to canvas size and apply user scale
       const scale = canvasSize.width / 800;
-      const targetWidth = 200 * scale;
+      const targetWidth = 200 * scale * imageScale;
       const imgScale = targetWidth / (img.width || 1);
       
       img.set({
@@ -107,7 +109,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       
       canvasRef.current?.add(img);
     });
-  }, [headshot, canvasRef, canvasSize]);
+  }, [headshot, canvasRef, canvasSize, imageScale]);
 
   useEffect(() => {
     if (!canvasRef.current) return;

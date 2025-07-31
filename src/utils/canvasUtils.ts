@@ -1,8 +1,8 @@
 import { Canvas, FabricImage, FabricText } from 'fabric';
-import { CanvasPosition } from '../types';
+import type { CanvasPosition } from '../types';
 
 export const createCanvas = (width: number, height: number): Canvas => {
-  const canvas = new Canvas(null, {
+  const canvas = new Canvas(undefined, {
     width,
     height,
     backgroundColor: 'white',
@@ -49,6 +49,7 @@ export const exportCanvasAsJPEG = (canvas: Canvas, quality: number = 0.9): strin
   return canvas.toDataURL({
     format: 'jpeg',
     quality,
+    multiplier: 1,
   });
 };
 

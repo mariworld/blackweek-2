@@ -1,30 +1,40 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Canvas } from 'fabric';
 import { ImageUpload } from './components/ImageUpload';
 import { EmojiPicker } from './components/EmojiPicker';
 import { PosterPreview } from './components/PosterPreview';
 import { DownloadButton } from './components/DownloadButton';
 import { ImageProcessingService } from './services/imageProcessing';
-import { ProcessedImage } from './types';
+import type { ProcessedImage } from './types';
 import posterImage from './assets/no-emoji-BW_poster2.jpg';
+import blackweekLogo from './assets/blackweek-logo.svg';
 import { config } from './config';
 
 function App() {
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [processedHeadshot, setProcessedHeadshot] = useState<ProcessedImage | null>(null);
   const [selectedEmojis, setSelectedEmojis] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [removeBackground, setRemoveBackground] = useState(true);
+  const [imageScale, setImageScale] = useState(1.0);
+  const [showBackgroundTip, setShowBackgroundTip] = useState(false);
   const canvasRef = useRef<Canvas | null>(null);
 
   // Initialize image processing service with API key from config
   const imageProcessor = useRef(new ImageProcessingService(config.REPLICATE_API_KEY));
 
   const handleImageSelect = async (imageDataUrl: string) => {
+    setOriginalImage(imageDataUrl);
+    await processImage(imageDataUrl);
+  };
+
+  const processImage = async (imageDataUrl: string, isRegenerate: boolean = false) => {
     setIsProcessing(true);
     setError(null);
     
     try {
-      const processed = await imageProcessor.current.processHeadshot(imageDataUrl);
+      const processed = await imageProcessor.current.processHeadshot(imageDataUrl, removeBackground, isRegenerate);
       setProcessedHeadshot(processed);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process image');
@@ -34,12 +44,14 @@ function App() {
     }
   };
 
-  const handleEmojiSelect = (emoji: string) => {
-    if (selectedEmojis.length < 4) {
-      setSelectedEmojis([...selectedEmojis, emoji]);
-    } else {
-      alert('You can add up to 4 emojis only');
+  const handleRegenerate = async () => {
+    if (originalImage) {
+      await processImage(originalImage, true);
     }
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setSelectedEmojis([...selectedEmojis, emoji]);
   };
 
   const removeEmoji = (index: number) => {
@@ -47,23 +59,26 @@ function App() {
   };
 
   const resetPoster = () => {
+    setOriginalImage(null);
     setProcessedHeadshot(null);
     setSelectedEmojis([]);
     setError(null);
+    setImageScale(1.0);
   };
 
   const canDownload = processedHeadshot !== null || selectedEmojis.length > 0;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white font-suisse">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <header className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2">
-            BLACKWEEK 2025
-          </h1>
-          <p className="text-sm sm:text-lg text-gray-400 uppercase tracking-wider">
-            Poster Customizer
-          </p>
+          <div className="flex justify-center mb-4">
+            <img 
+              src={blackweekLogo} 
+              alt="BLACKWEEK 2025" 
+              className="h-12 sm:h-16 lg:h-20 w-auto"
+            />
+          </div>
           {!config.REPLICATE_API_KEY && (
             <p className="text-xs text-yellow-500 mt-2">
               Using local sketch filter (Replicate API key not configured)
@@ -85,30 +100,121 @@ function App() {
 
         <div className="grid lg:grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
           <div className="space-y-6">
-            <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-xl p-6">
-              <h2 className="text-xl font-semibold mb-4 text-white">
+            <div className="border border-gray-800 rounded-lg shadow-xl p-6">
+              <h2 className="text-xl font-bold mb-4 text-white">
                 Step 1: Upload Your Headshot
               </h2>
               <ImageUpload onImageSelect={handleImageSelect} isProcessing={isProcessing} />
               
+              <div className="mt-4">
+                <div className="relative">
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={removeBackground}
+                      onChange={(e) => {
+                        setRemoveBackground(e.target.checked);
+                        if (e.target.checked && !showBackgroundTip) {
+                          setShowBackgroundTip(true);
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
+                      disabled={isProcessing}
+                    />
+                    <span className="text-gray-300 flex items-center gap-1">
+                      Remove background after AI processing
+                      <button
+                        type="button"
+                        onClick={() => setShowBackgroundTip(!showBackgroundTip)}
+                        className="text-gray-400 hover:text-gray-200 ml-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </span>
+                  </label>
+                  
+                  {showBackgroundTip && (
+                    <div className="absolute z-10 mt-2 p-4 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-sm">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-sm font-bold text-white">Background Removal Tips</h4>
+                        <button
+                          onClick={() => setShowBackgroundTip(false)}
+                          className="text-gray-400 hover:text-white ml-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="space-y-2 text-xs text-gray-300">
+                        <p>⚠️ <span className="font-semibold">Important:</span> Background removal may accidentally cut parts of your image.</p>
+                        <p>For best results:</p>
+                        <ul className="list-disc list-inside ml-2 space-y-1">
+                          <li>Use a clean, well-lit headshot</li>
+                          <li>Ensure good contrast between you and the background</li>
+                          <li>Avoid busy patterns or similar colors to the background</li>
+                          <li>Center yourself in the frame with some space around</li>
+                        </ul>
+                        <p className="mt-2 text-yellow-400">💡 Tip: If important parts get cut, try disabling background removal and using a plain background instead.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               {processedHeadshot && (
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-sm text-green-400 font-medium">
-                    ✓ Headshot processed successfully
-                  </p>
-                  <button
-                    onClick={() => setProcessedHeadshot(null)}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    Change photo
-                  </button>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-green-400 font-semibold">
+                      ✓ Headshot processed successfully
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleRegenerate}
+                        disabled={isProcessing}
+                        className="text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+                      >
+                        Regenerate
+                      </button>
+                      <button
+                        onClick={() => {
+                          setOriginalImage(null);
+                          setProcessedHeadshot(null);
+                          setImageScale(1.0);
+                        }}
+                        className="text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        Change photo
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm text-gray-300 block mb-1">Image Scale: {(imageScale * 100).toFixed(0)}%</label>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2.0"
+                      step="0.1"
+                      value={imageScale}
+                      onChange={(e) => setImageScale(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>50%</span>
+                      <span>100%</span>
+                      <span>200%</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-xl p-6">
-              <h2 className="text-xl font-semibold mb-4 text-white">
-                Step 2: Add Emojis ({selectedEmojis.length}/4)
+            <div className="border border-gray-800 rounded-lg shadow-xl p-6">
+              <h2 className="text-xl font-bold mb-4 text-white">
+                Step 2: Add Emojis ({selectedEmojis.length})
               </h2>
               <EmojiPicker
                 selectedEmojis={selectedEmojis}
@@ -137,15 +243,15 @@ function App() {
               <DownloadButton canvasRef={canvasRef} disabled={!canDownload} />
               <button
                 onClick={resetPoster}
-                className="px-6 py-3 rounded-lg font-semibold text-white bg-gray-800 hover:bg-gray-700 transition-all"
+                className="px-6 py-3 rounded-lg font-bold text-white bg-gray-800 hover:bg-gray-700 transition-all"
               >
                 Reset
               </button>
             </div>
           </div>
 
-          <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-xl p-4 sm:p-6">
-            <h2 className="text-xl font-semibold mb-4 text-white text-center lg:text-left">
+          <div className="border border-gray-800 rounded-lg shadow-xl p-4 sm:p-6">
+            <h2 className="text-xl font-bold mb-4 text-white text-center lg:text-left">
               Preview
             </h2>
             <PosterPreview
@@ -153,6 +259,7 @@ function App() {
               headshot={processedHeadshot}
               emojis={selectedEmojis}
               canvasRef={canvasRef}
+              imageScale={imageScale}
             />
           </div>
         </div>

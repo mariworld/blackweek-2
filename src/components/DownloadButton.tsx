@@ -25,7 +25,7 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({ canvasRef, disab
     <button
       onClick={handleDownload}
       disabled={disabled}
-      className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+      className={`px-6 py-3 rounded-lg font-bold transition-all ${
         disabled
           ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
           : 'bg-white text-black hover:bg-gray-200 active:scale-95'

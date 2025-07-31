@@ -5,7 +5,15 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'suisse': ['Suisse Intl', 'sans-serif'],
+      },
+      fontWeight: {
+        'semibold': 600,
+        'bold': 700,
+      }
+    },
   },
   plugins: [],
 }

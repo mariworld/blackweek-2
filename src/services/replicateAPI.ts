@@ -6,7 +6,7 @@ export class ReplicateService {
     this.apiKey = apiKey;
   }
 
-  async cartoonifyImage(imageDataUrl: string): Promise<string> {
+  async cartoonifyImage(imageDataUrl: string, seed?: number): Promise<string> {
     try {
       if (!this.apiKey) {
         console.warn('No Replicate API key provided, using fallback');
@@ -35,6 +35,7 @@ export class ReplicateService {
         body: JSON.stringify({
           imageDataUrl,
           aspectRatio: aspectRatioString,
+          seed,
         }),
       });
 
