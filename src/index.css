@@ -5,8 +5,7 @@
 /* Suisse Intl Font Face Definitions */
 @font-face {
   font-family: 'Suisse Intl';
-  src: url('./fonts/SuisseIntl-Bold.woff2') format('woff2'),
-       url('./fonts/SuisseIntl-Bold.woff') format('woff');
+  src: url('./fonts/SuisseIntl-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -14,8 +13,7 @@
 
 @font-face {
   font-family: 'Suisse Intl';
-  src: url('./fonts/SuisseIntl-SemiBold.woff2') format('woff2'),
-       url('./fonts/SuisseIntl-SemiBold.woff') format('woff');
+  src: url('./fonts/SuisseIntl-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
