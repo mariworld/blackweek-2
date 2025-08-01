@@ -319,7 +319,8 @@ function App() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* Desktop: Keep buttons here */}
+            <div className="hidden xl:flex flex-col sm:flex-row gap-4 justify-center">
               <DownloadButton canvasRef={canvasRef} disabled={!canDownload} />
               <button
                 onClick={resetPoster}
@@ -374,6 +375,17 @@ function App() {
               removeBackground={removeBackground}
             />
           </div>
+        </div>
+
+        {/* Mobile/Tablet: Show buttons at the bottom */}
+        <div className="xl:hidden mt-6 flex flex-col sm:flex-row gap-4 justify-center px-4">
+          <DownloadButton canvasRef={canvasRef} disabled={!canDownload} />
+          <button
+            onClick={resetPoster}
+            className="px-6 py-3 rounded-lg font-bold text-white bg-gray-800 hover:bg-gray-700 transition-all"
+          >
+            Reset
+          </button>
         </div>
 
         <footer className="mt-12 text-center text-gray-500 text-sm">
