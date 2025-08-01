@@ -36,6 +36,9 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
   }, [showDragHint, headshot, emojis]);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let lastWidth = window.innerWidth;
+    
     const updateCanvasSize = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
@@ -46,9 +49,22 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       }
     };
 
+    const handleResize = () => {
+      // Only handle actual window width changes, not height changes from mobile browser UI
+      const currentWidth = window.innerWidth;
+      if (Math.abs(currentWidth - lastWidth) > 10) {
+        lastWidth = currentWidth;
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(updateCanvasSize, 300);
+      }
+    };
+
     updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   useEffect(() => {
@@ -246,7 +262,10 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
         <canvas 
           ref={fabricCanvasRef} 
           className="max-w-full h-auto shadow-xl rounded"
-          style={{ maxHeight: '70vh' }}
+          style={{ 
+            maxHeight: '70vh',
+            touchAction: 'manipulation' // Allow touch but prevent unwanted gestures
+          }}
         />
       </div>
       
