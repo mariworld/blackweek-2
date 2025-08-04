@@ -149,7 +149,7 @@ app.post('/api/transform-image', async (req, res) => {
       const prediction = await replicate.predictions.create({
         version: "0f1178f5a27e9aa2d2d39c8a43c110f7fa7cbf64062ff04a04cd40899e546065",
         input: {
-          prompt: "Make this a greyscale cartoon sketch with silhouette style, remove facial features from headshot and keep everything else",
+          prompt: "Make this greyscale, enhance to make it look like a portrait and make the background simple. make it elevated. remove the background",
           input_image: processedImageData,
           ...(seed !== undefined && { seed: parseInt(seed) })
         }
@@ -271,7 +271,7 @@ app.post('/api/transform-image-fallback', async (req, res) => {
     const prediction = await replicate.predictions.create({
       version: "f2ab8a5bfe79f02f0dde7a32f8c5b1ef0c2e6f14f5e2e3ae885ffcab126d6253", // FLUX dev version
       input: {
-        prompt: "transform into black and white cartoon sketch drawing, pencil sketch, line art, high contrast, simple silhouette style",
+        prompt: "Make this greyscale, enhance to make it look like a portrait and make the background simple. make it elevated. remove the background",
         image: processedImageData,
         prompt_strength: 0.8,
         num_outputs: 1,

@@ -344,7 +344,9 @@ function App() {
             {processedHeadshot && (
               <div className="mb-4 bg-black/50 rounded-lg p-4 border border-gray-700">
                 <label className="text-sm text-gray-300 block mb-2">
-                  Photo Size: <span className="font-semibold text-white">{(imageScale * 100).toFixed(0)}%</span>
+                  Photo Resizer: <span className="font-semibold text-white">{(imageScale * 100).toFixed(0)}% </span>
+                  <span>    </span>
+                  <span className="text-xs text-gray-400">(drag to resize)</span>
                 </label>
                 <input
                   type="range"
