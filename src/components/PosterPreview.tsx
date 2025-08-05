@@ -21,9 +21,12 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fabricCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 1066 });
+  const CANVAS_WIDTH = 800;
+  const CANVAS_HEIGHT = 1066;
+  const [scale, setScale] = useState(1);
   const [showDragHint, setShowDragHint] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
 
   // Auto-hide drag hint after 5 seconds
   useEffect(() => {
@@ -37,45 +40,99 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    let lastWidth = window.innerWidth;
     
-    const updateCanvasSize = () => {
+    const updateScale = () => {
       if (containerRef.current) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
         const containerWidth = containerRef.current.offsetWidth;
-        const aspectRatio = 800 / 1066;
-        const newWidth = Math.min(containerWidth - 32, 800); // 32px for padding
-        const newHeight = newWidth / aspectRatio;
-        setCanvasSize({ width: newWidth, height: newHeight });
+        
+        // Simple device detection
+        const isMobile = viewportWidth < 768;
+        const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
+        
+        let finalScale;
+        
+        if (isMobile) {
+          // MOBILE: Fit width completely with more padding for comfortable viewing
+          const padding = 60; // Increased padding for smaller poster
+          const targetWidth = viewportWidth - padding;
+          finalScale = targetWidth / CANVAS_WIDTH;
+          
+          // Don't let it get too small
+          const minScale = 0.35; // Minimum 35% of original size
+          finalScale = Math.max(finalScale, minScale);
+          
+          // Cap the scale to ensure it fits horizontally with room to spare
+          const maxMobileScale = (viewportWidth - 50) / CANVAS_WIDTH;
+          finalScale = Math.min(finalScale, maxMobileScale);
+          
+          // Show scroll hint if needed for vertical scrolling
+          if (CANVAS_HEIGHT * finalScale > viewportHeight * 0.7) {
+            setShowScrollHint(true);
+            setTimeout(() => setShowScrollHint(false), 5000);
+          }
+        } else if (isTablet) {
+          // TABLET: Balance between width and height
+          const padding = 32;
+          const maxWidth = Math.min(containerWidth - padding, 700);
+          const maxHeight = viewportHeight * 0.65;
+          
+          const scaleX = maxWidth / CANVAS_WIDTH;
+          const scaleY = maxHeight / CANVAS_HEIGHT;
+          finalScale = Math.min(scaleX, scaleY, 1);
+        } else {
+          // DESKTOP: Original sizing
+          const padding = 32;
+          const maxWidth = Math.min(containerWidth - padding, CANVAS_WIDTH);
+          const maxHeight = viewportHeight * 0.7;
+          
+          const scaleX = maxWidth / CANVAS_WIDTH;
+          const scaleY = maxHeight / CANVAS_HEIGHT;
+          finalScale = Math.min(scaleX, scaleY, 1);
+        }
+        
+        setScale(finalScale);
       }
     };
 
     const handleResize = () => {
-      // Only handle actual window width changes, not height changes from mobile browser UI
-      const currentWidth = window.innerWidth;
-      if (Math.abs(currentWidth - lastWidth) > 10) {
-        lastWidth = currentWidth;
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(updateCanvasSize, 300);
-      }
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateScale, 100);
     };
 
-    updateCanvasSize();
+    const handleOrientationChange = () => {
+      // Force immediate update on orientation change
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateScale, 200);
+    };
+
+    updateScale();
     window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
     return () => {
       clearTimeout(timeoutId);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, []);
 
   useEffect(() => {
     if (!fabricCanvasRef.current || !containerRef.current) return;
 
-    // Initialize Fabric canvas
+    // Initialize Fabric canvas with scaled dimensions
     const canvas = new Canvas(fabricCanvasRef.current, {
-      width: canvasSize.width,
-      height: canvasSize.height,
+      width: CANVAS_WIDTH * scale,
+      height: CANVAS_HEIGHT * scale,
       backgroundColor: 'white',
       selection: true,
+    });
+    
+    // Set CSS size to match
+    canvas.setDimensions({
+      width: CANVAS_WIDTH * scale,
+      height: CANVAS_HEIGHT * scale
     });
 
     canvasRef.current = canvas;
@@ -87,8 +144,8 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       img.set({
         left: 0,
         top: 0,
-        scaleX: canvasSize.width / (img.width || 1),
-        scaleY: canvasSize.height / (img.height || 1),
+        scaleX: (CANVAS_WIDTH * scale) / (img.width || 1),
+        scaleY: (CANVAS_HEIGHT * scale) / (img.height || 1),
         selectable: false,
         evented: false,
       });
@@ -100,7 +157,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
     return () => {
       canvas.dispose();
     };
-  }, [posterImage, canvasRef, canvasSize]);
+  }, [posterImage, canvasRef, scale]);
 
   // Track user interactions in a separate effect
   useEffect(() => {
@@ -135,14 +192,13 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
     FabricImage.fromURL(headshot.processed).then((img) => {
       if (!img) return;
       
-      // Scale proportionally to canvas size and apply user scale
-      const scale = canvasSize.width / 800;
-      const targetWidth = 200 * scale * imageScale;
+      // Apply user scale with canvas scale
+      const targetWidth = 200 * imageScale * scale;
       const imgScale = targetWidth / (img.width || 1);
       
       // Center the image on the canvas and move it up by 125 units
-      const centerX = (canvasSize.width / 2) - ((img.width || 0) * imgScale / 2);
-      const centerY = (canvasSize.height / 2) - ((img.height || 0) * imgScale / 2) - (125 * scale);
+      const centerX = ((CANVAS_WIDTH * scale) / 2) - ((img.width || 0) * imgScale / 2);
+      const centerY = ((CANVAS_HEIGHT * scale) / 2) - ((img.height || 0) * imgScale / 2) - (125 * scale);
       
       img.set({
         left: centerX,
@@ -168,7 +224,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       
       canvasRef.current?.add(img);
     });
-  }, [headshot, canvasRef, canvasSize, imageScale, removeBackground]);
+  }, [headshot, canvasRef, imageScale, removeBackground, scale]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -187,8 +243,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       }
     });
 
-    // Scale factor for responsive sizing
-    const scale = canvasSize.width / 800;
+    // No scaling needed - canvas is fixed size
 
     // Define preset positions for up to 5 emojis
     const presetPositions = [
@@ -236,10 +291,10 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
         canvasRef.current?.remove(obj);
       }
     });
-  }, [emojis, canvasRef, canvasSize]);
+  }, [emojis, canvasRef, scale]);
 
   return (
-    <div ref={containerRef} className="bg-black/50 rounded-lg p-4 shadow-inner relative">
+    <div ref={containerRef} className="bg-black/50 rounded-lg p-2 sm:p-4 shadow-inner relative w-full max-w-full">
       {/* Animated hint overlay */}
       {showDragHint && (headshot || emojis.length > 0) && (
         <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
@@ -258,15 +313,44 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
         </div>
       )}
       
-      <div className="flex justify-center relative">
-        <canvas 
-          ref={fabricCanvasRef} 
-          className="max-w-full h-auto shadow-xl rounded"
+      <div className="relative w-full">
+        {showScrollHint && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-blue-600/90 text-white px-3 py-1 rounded-lg text-xs flex items-center gap-2 animate-pulse">
+            <span>👇</span>
+            <span>Scroll to see full poster</span>
+          </div>
+        )}
+        <div 
+          className="w-full" 
           style={{ 
-            maxHeight: '70vh',
-            touchAction: 'manipulation' // Allow touch but prevent unwanted gestures
+            maxHeight: '75vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
           }}
-        />
+        >
+          <div 
+            style={{ 
+              width: `${CANVAS_WIDTH * scale}px`,
+              height: `${CANVAS_HEIGHT * scale}px`,
+              margin: '0 auto',
+              position: 'relative',
+            }}
+          >
+            <canvas 
+              ref={fabricCanvasRef} 
+              className="shadow-xl rounded"
+              style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: `${CANVAS_WIDTH * scale}px`,
+                height: `${CANVAS_HEIGHT * scale}px`,
+                touchAction: 'manipulation',
+              }}
+            />
+          </div>
+        </div>
       </div>
       
       {(headshot || emojis.length > 0) && (

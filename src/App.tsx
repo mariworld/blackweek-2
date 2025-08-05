@@ -83,8 +83,8 @@ function App() {
   const canDownload = processedHeadshot !== null || selectedEmojis.length > 0;
 
   return (
-    <div className="min-h-screen bg-black text-white font-suisse">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="min-h-screen bg-black text-white font-suisse overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 overflow-x-hidden">
         {/* Mobile and tablet disclaimer */}
         <div className="xl:hidden mb-4 p-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
           <p className="text-xs text-yellow-200 text-center leading-relaxed">
@@ -119,7 +119,7 @@ function App() {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto w-full">
           <div className="space-y-6">
             <div className="border border-gray-800 rounded-lg shadow-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-white">
@@ -335,7 +335,7 @@ function App() {
             </div>
           </div>
 
-          <div className="border border-gray-800 rounded-lg shadow-xl p-4 sm:p-6">
+          <div className="border border-gray-800 rounded-lg shadow-xl p-2 sm:p-4 lg:p-6 w-full max-w-full">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-white">
                 Preview
