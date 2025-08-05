@@ -21,6 +21,7 @@ function App() {
   const [showBackgroundTip, setShowBackgroundTip] = useState(false);
   const [uploadStep, setUploadStep] = useState<'select-mode' | 'upload' | 'confirm' | 'processed'>('select-mode');
   const [showRegenerateTip, setShowRegenerateTip] = useState(false);
+  const [showExampleTooltip, setShowExampleTooltip] = useState(false);
   const canvasRef = useRef<Canvas | null>(null);
 
   // Initialize image processing service with API key from config
@@ -130,6 +131,27 @@ function App() {
               {uploadStep === 'select-mode' && (
                 <div className="space-y-4">
                   <p className="text-sm text-gray-300 mb-4">First, choose how you want your portrait to appear:</p>
+                  
+                  <div className="p-3 bg-blue-900/20 border border-blue-700/50 rounded-lg">
+                    <p className="text-xs text-blue-200">
+                      <span className="font-semibold">📌 Note:</span> After uploading your photo, you'll be able to resize it using the slider to ensure it doesn't cover important elements on the poster.
+                      <button
+                        onClick={() => setShowExampleTooltip(!showExampleTooltip)}
+                        className="ml-2 text-blue-400 hover:text-blue-300 underline text-xs"
+                      >
+                        See an example
+                      </button>
+                    </p>
+                    {showExampleTooltip && (
+                      <div className="mt-3 relative">
+                        <img 
+                          src="/src/assets/example.png"
+                          alt="Example of resized photo on poster"
+                          className="w-full rounded-lg border border-blue-700/30"
+                        />
+                      </div>
+                    )}
+                  </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
