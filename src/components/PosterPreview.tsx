@@ -358,7 +358,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
           <div className="flex items-center justify-center gap-2 text-sm">
             <span className="text-2xl">💡</span>
             <p className="text-white font-medium">
-              Pro tip: Drag elements to reposition them on your poster!
+              Pro tip: Drag headshot/emojis to reposition them on your poster!
             </p>
           </div>
           
@@ -368,11 +368,12 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
                 <span className="text-blue-400 text-lg">ℹ️</span>
                 <div className="text-xs text-blue-200">
                   <p className="font-semibold mb-1">How to customize your poster:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-2">
+                  <ul className="list-disc list-inside space-y-1">
                     <li>Click on any photo or emoji</li>
                     <li>Drag it to your desired position</li>
                     <li>Release to place it there</li>
-                    <li>You can reposition elements as many times as you want!</li>
+                    <li>You can reposition emoji and headshot as many times as you want!</li>
+                    <li className="text-yellow-300 font-semibold">⚠️ WARNING: Headshots & emoji should not be moved to cover up the words</li>
                   </ul>
                 </div>
               </div>
