@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       const prediction = await replicate.predictions.create({
         version: "0f1178f5a27e9aa2d2d39c8a43c110f7fa7cbf64062ff04a04cd40899e546065",
         input: {
-          prompt: "Make this greyscale, enhance to make it look like a portrait and make the background simple. make it elevated. remove the background",
+          prompt: "Make this a greyscale stylized sketch, most importantly, make the face/skin darker, keep the person's head and their clothing intact. It should look like a portrait.",
           input_image: imageDataUrl,
           ...(seed !== undefined && { seed: parseInt(seed) })
         }
