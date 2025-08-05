@@ -220,7 +220,11 @@ function App() {
                       <button
                         onClick={handleProcessImage}
                         disabled={isProcessing}
-                        className="flex-1 px-4 py-2 bg-white hover:bg-gray-200 disabled:bg-gray-700 text-black rounded-lg font-bold transition-colors disabled:opacity-50"
+                        className={`flex-1 px-4 py-2 rounded-lg font-bold transition-colors ${
+                          isProcessing 
+                            ? 'bg-gray-700 text-white disabled:opacity-50' 
+                            : 'bg-white hover:bg-gray-200 text-black'
+                        }`}
                       >
                         {isProcessing ? 'Processing...' : 'Process Image'}
                       </button>
