@@ -6,7 +6,7 @@ import { PosterPreview } from './components/PosterPreview';
 import { DownloadButton } from './components/DownloadButton';
 import { ImageProcessingService } from './services/imageProcessing';
 import type { ProcessedImage } from './types';
-import posterImage from './assets/no-emoji-BW_poster3.png';
+import posterImage from './assets/no_emoji_BW_poster4.png';
 import blackweekLogo from './assets/blackweek-logo.svg';
 import { config } from './config';
 

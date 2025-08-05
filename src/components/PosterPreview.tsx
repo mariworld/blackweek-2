@@ -192,11 +192,11 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
 
     // Define preset positions for up to 5 emojis
     const presetPositions = [
-      { left: 170, top: 760 },  // 1st emoji: bottom left
+      { left: 200, top: 780 },  // 1st emoji: bottom left
       { left: 625, top: 300 },  // 2nd emoji: mid right
-      { left: 560, top: 360 },  // 3rd emoji: mid right
-      { left: 525, top: 450 },  // 4th emoji: mid right
-      { left: 650, top: 450 },  // 5th emoji: mid right
+      { left: 560, top: 380 },  // 3rd emoji: mid right
+      { left: 525, top: 470 },  // 4th emoji: mid right
+      { left: 650, top: 490 },  // 5th emoji: mid right
     ];
 
     // Add only new emojis
@@ -204,7 +204,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       if (!existingMap.has(index) && index < 5) {
         const position = presetPositions[index];
         // First emoji is larger (100), emojis 2-5 are smaller (60)
-        const emojiSize = index === 0 ? 150 : 60;
+        const emojiSize = index === 0 ? 130 : 60;
         const emojiText = new FabricText(emoji, {
           left: position.left * scale,
           top: position.top * scale,
