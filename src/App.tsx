@@ -9,6 +9,7 @@ import type { ProcessedImage } from './types';
 import posterImage from './assets/no_emoji_BW_poster4.png';
 import blackweekLogo from './assets/blackweek-logo.svg';
 import { config } from './config';
+import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -422,6 +423,7 @@ function App() {
           <p className="mt-1">Oct 6-9 • NYC</p>
         </footer>
       </div>
+      <Analytics />
     </div>
   );
 }
