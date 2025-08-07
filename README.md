@@ -1,6 +1,6 @@
 # BlackWeek 2025 Poster Customizer
 
-A web application that allows users to customize a BlackWeek 2025 poster by adding their headshot and emoji.
+A web application that allows users to customize a BlackWeek 2025 poster by adding their headshot and emoji..
 
 ## Setup Instructions
 
