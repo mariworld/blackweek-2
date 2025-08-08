@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       const prediction = await replicate.predictions.create({
         version: "0f1178f5a27e9aa2d2d39c8a43c110f7fa7cbf64062ff04a04cd40899e546065",
         input: {
-          prompt: "Make this a greyscale stylized sketch, most importantly, make the face/skin darker, keep the person's head and their clothing intact. It should look like a portrait.",
+          prompt: "Greyscale conversion only, darken face and skin areas, keep ALL existing elements: glasses if present, earrings, facial hair, clothing, hair style - preserve everything exactly as shown, no removal or modification of any features, maintain photographic accuracy, only adjust lighting and convert to greyscale",
           input_image: imageDataUrl,
           ...(seed !== undefined && { seed: parseInt(seed) })
         }

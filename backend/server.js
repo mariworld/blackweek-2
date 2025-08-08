@@ -273,7 +273,7 @@ app.post('/api/transform-image-fallback', async (req, res) => {
     const prediction = await replicate.predictions.create({
       version: "f2ab8a5bfe79f02f0dde7a32f8c5b1ef0c2e6f14f5e2e3ae885ffcab126d6253", // FLUX dev version
       input: {
-        prompt: "Make this a greyscale stylized sketch, most importantly, make the face/skin darker, keep the person's head and their clothing intact. It should look like a portrait.",
+        prompt: "Greyscale conversion only, darken face and skin areas, keep ALL existing elements: glasses if present, earrings, facial hair, clothing, hair style - preserve everything exactly as shown, no removal or modification of any features, maintain photographic accuracy, only adjust lighting and convert to greyscale",
         image: processedImageData,
         prompt_strength: 0.8,
         num_outputs: 1,
