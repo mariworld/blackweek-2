@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cloudinary Background Removal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-box {
+            flex: 1;
+            border: 2px dashed #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Cloudinary Background Removal</h1>
+    
+    <div>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="testBackgroundRemoval()">Test Background Removal</button>
+    </div>
+    
+    <div id="status">Ready to test...</div>
+    
+    <div class="container">
+        <div class="image-box">
+            <h3>Original Image</h3>
+            <img id="originalImage" src="" alt="Original">
+        </div>
+        <div class="image-box">
+            <h3>Background Removed</h3>
+            <img id="processedImage" src="" alt="Processed">
+        </div>
+    </div>
+
+    <script>
+        const CLOUD_NAME = 'dbkdfyboi';
+        const UPLOAD_PRESET = 'ml_default';
+        
+        function log(message) {
+            const status = document.getElementById('status');
+            status.textContent += message + '\n';
+            console.log(message);
+        }
+        
+        async function testBackgroundRemoval() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image first');
+                return;
+            }
+            
+            document.getElementById('status').textContent = '';
+            log('Starting test...');
+            
+            // Show original image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('originalImage').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            try {
+                // Create form data
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', UPLOAD_PRESET);
+                
+                log(`Uploading to Cloudinary (cloud name: ${CLOUD_NAME})...`);
+                
+                // Upload to Cloudinary
+                const uploadResponse = await fetch(
+                    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+                    {
+                        method: 'POST',
+                        body: formData,
+                    }
+                );
+                
+                if (!uploadResponse.ok) {
+                    const errorText = await uploadResponse.text();
+                    log(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+                    log(`Error details: ${errorText}`);
+                    
+                    // Parse error to give more specific feedback
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        if (errorData.error) {
+                            log(`Cloudinary error: ${errorData.error.message}`);
+                        }
+                    } catch (e) {
+                        // Ignore JSON parse error
+                    }
+                    return;
+                }
+                
+                const uploadData = await uploadResponse.json();
+                log(`Upload successful! Public ID: ${uploadData.public_id}`);
+                log(`Secure URL: ${uploadData.secure_url}`);
+                
+                // Generate URL with background removal
+                // Try different transformation formats
+                const transformedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/e_background_removal/f_auto/${uploadData.public_id}`;
+                
+                // Also try alternative format
+                const altUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/e_background_removal/${uploadData.public_id}`;
+                log(`Alternative URL: ${altUrl}`);
+                log(`Transformed URL: ${transformedUrl}`);
+                
+                // Show processed image
+                document.getElementById('processedImage').src = transformedUrl;
+                log('Background removal complete! Check the image on the right.');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`);
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,12 +2,6 @@ import { BackgroundRemovalService } from './backgroundRemoval';
 import { ReplicateService } from './replicateAPI';
 import type { ProcessedImage } from '../types';
 
-declare global {
-  interface Window {
-    SelfieSegmentation: any;
-  }
-}
-
 export class ImageProcessingService {
   private backgroundRemoval: BackgroundRemovalService | null = null;
   private replicateService: ReplicateService | null;
@@ -18,17 +12,6 @@ export class ImageProcessingService {
 
   private async getBackgroundRemovalService(): Promise<BackgroundRemovalService> {
     if (!this.backgroundRemoval) {
-      // Wait for MediaPipe to load
-      let attempts = 0;
-      while (!window.SelfieSegmentation && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
-      
-      if (!window.SelfieSegmentation) {
-        throw new Error('MediaPipe SelfieSegmentation failed to load');
-      }
-      
       this.backgroundRemoval = new BackgroundRemovalService();
     }
     return this.backgroundRemoval;
