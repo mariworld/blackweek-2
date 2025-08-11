@@ -177,53 +177,100 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
     };
   }, [hasInteracted]);
 
+  // Handle headshot addition/update
   useEffect(() => {
     if (!canvasRef.current || !headshot) return;
 
-    // Remove existing headshot if any
+    // Check if headshot already exists
     const existingHeadshot = canvasRef.current.getObjects().find(
       obj => (obj as any).data?.type === 'headshot'
     );
-    if (existingHeadshot) {
-      canvasRef.current.remove(existingHeadshot);
-    }
 
-    // Add processed headshot
-    FabricImage.fromURL(headshot.processed).then((img) => {
-      if (!img) return;
-      
-      // Apply user scale with canvas scale
+    if (existingHeadshot) {
+      // Just update the scale of existing headshot
       const targetWidth = 200 * imageScale * scale;
-      const imgScale = targetWidth / (img.width || 1);
+      const imgScale = targetWidth / ((existingHeadshot as any).width || 1);
       
-      // Center the image on the canvas and move it up by 125 units
-      const centerX = ((CANVAS_WIDTH * scale) / 2) - ((img.width || 0) * imgScale / 2);
-      const centerY = ((CANVAS_HEIGHT * scale) / 2) - ((img.height || 0) * imgScale / 2) - (125 * scale);
+      // Get current position or calculate new center
+      const currentLeft = existingHeadshot.left || 0;
+      const currentTop = existingHeadshot.top || 0;
       
-      img.set({
-        left: centerX,
-        top: centerY,
+      // Only recenter if it's at the default position (hasn't been moved by user)
+      const isAtDefaultPosition = !existingHeadshot.get('hasMoved');
+      
+      if (isAtDefaultPosition) {
+        const centerX = ((CANVAS_WIDTH * scale) / 2) - (((existingHeadshot as any).width || 0) * imgScale / 2);
+        const centerY = ((CANVAS_HEIGHT * scale) / 2) - (((existingHeadshot as any).height || 0) * imgScale / 2) - (125 * scale);
+        existingHeadshot.set({
+          left: centerX,
+          top: centerY,
+        });
+      }
+      
+      existingHeadshot.set({
         scaleX: imgScale,
         scaleY: imgScale,
-        data: { type: 'headshot' },
-        selectable: true,
-        evented: true,
-        hasControls: false,
-        hasBorders: true,
-        lockRotation: true,
-        lockScalingX: true,
-        lockScalingY: true,
-        stroke: removeBackground === false ? '#ececed' : undefined,
-        strokeWidth: removeBackground === false ? 2 : 0,
-        borderColor: '#f8f8fa',
-        borderScaleFactor: 2,
-        cornerColor: '#60A5FA',
-        cornerSize: 8,
-        transparentCorners: false,
       });
       
-      canvasRef.current?.add(img);
-    });
+      canvasRef.current.renderAll();
+    } else {
+      // Remove any duplicate headshots first
+      const duplicates = canvasRef.current.getObjects().filter(
+        obj => (obj as any).data?.type === 'headshot'
+      );
+      duplicates.forEach(obj => {
+        canvasRef.current?.remove(obj);
+      });
+      
+      // Add new headshot
+      FabricImage.fromURL(headshot.processed).then((img) => {
+        if (!img || !canvasRef.current) return;
+        
+        // Check one more time for duplicates before adding
+        const existingNow = canvasRef.current.getObjects().find(
+          obj => (obj as any).data?.type === 'headshot'
+        );
+        if (existingNow) return; // Don't add if one already exists
+        
+        // Apply user scale with canvas scale
+        const targetWidth = 200 * imageScale * scale;
+        const imgScale = targetWidth / (img.width || 1);
+        
+        // Center the image on the canvas and move it up by 125 units
+        const centerX = ((CANVAS_WIDTH * scale) / 2) - ((img.width || 0) * imgScale / 2);
+        const centerY = ((CANVAS_HEIGHT * scale) / 2) - ((img.height || 0) * imgScale / 2) - (125 * scale);
+        
+        img.set({
+          left: centerX,
+          top: centerY,
+          scaleX: imgScale,
+          scaleY: imgScale,
+          data: { type: 'headshot' },
+          selectable: true,
+          evented: true,
+          hasControls: false,
+          hasBorders: true,
+          lockRotation: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          stroke: removeBackground === false ? '#ececed' : undefined,
+          strokeWidth: removeBackground === false ? 2 : 0,
+          borderColor: '#f8f8fa',
+          borderScaleFactor: 2,
+          cornerColor: '#60A5FA',
+          cornerSize: 8,
+          transparentCorners: false,
+          hasMoved: false, // Track if user has moved it
+        });
+        
+        // Listen for when user moves the image
+        img.on('modified', () => {
+          img.set('hasMoved', true);
+        });
+        
+        canvasRef.current.add(img);
+      });
+    }
   }, [headshot, canvasRef, imageScale, removeBackground, scale]);
 
   useEffect(() => {
@@ -373,7 +420,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
                     <li>Drag it to your desired position</li>
                     <li>Release to place it there</li>
                     <li>You can reposition emoji and headshot as many times as you want!</li>
-                    <li className="text-yellow-300 font-semibold">⚠️ WARNING: Headshots & emoji should not be moved to cover up the words</li>
+                    <li className="text-yellow-300 font-semibold">⚠️ WARNING: Headshots & emoji should not be moved to cover up the words/brand assets</li>
                   </ul>
                 </div>
               </div>

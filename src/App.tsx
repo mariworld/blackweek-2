@@ -378,19 +378,21 @@ function App() {
                 <input
                   type="range"
                   min="0.5"
-                  max="2.0"
+                  max="4.0"
                   step="0.1"
                   value={imageScale}
                   onChange={(e) => setImageScale(parseFloat(e.target.value))}
                   className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                   style={{
-                    background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((imageScale - 0.5) / 1.5) * 100}%, #374151 ${((imageScale - 0.5) / 1.5) * 100}%, #374151 100%)`
+                    background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((imageScale - 0.5) / 3.5) * 100}%, #374151 ${((imageScale - 0.5) / 3.5) * 100}%, #374151 100%)`
                   }}
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>50%</span>
                   <span>100%</span>
                   <span>200%</span>
+                  <span>300%</span>
+                  <span>400%</span>
                 </div>
               </div>
             )}

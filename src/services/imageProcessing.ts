@@ -110,16 +110,26 @@ export class ImageProcessingService {
     let finalImage: string;
     if (removeBackground) {
       try {
-        console.log('Removing background from processed image...');
+        console.log('[Image Processing] Starting background removal...');
+        console.log('[Image Processing] Background removal requested - calling service');
+        const startTime = Date.now();
+        
         const bgRemovalService = await this.getBackgroundRemovalService();
         finalImage = await bgRemovalService.removeBackground(processedImage);
-        console.log('Background removed successfully');
+        
+        const duration = Date.now() - startTime;
+        console.log('[Image Processing] ✅ Background removal completed successfully in', duration, 'ms');
       } catch (error) {
-        console.error('Failed to remove background:', error);
+        console.error('[Image Processing] ❌ Failed to remove background:', {
+          error: (error as Error).message,
+          stack: (error as Error).stack
+        });
         // Use the processed image without background removal if it fails
         finalImage = processedImage;
+        console.log('[Image Processing] Using processed image without background removal');
       }
     } else {
+      console.log('[Image Processing] Background removal not requested - using processed image as-is');
       finalImage = processedImage;
     }
 

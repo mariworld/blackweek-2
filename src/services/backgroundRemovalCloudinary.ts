@@ -1,5 +1,5 @@
 export class CloudinaryBackgroundRemovalService {
-  private cloudName: string = 'dbkdfyboi';
+  private cloudName: string = 'dj5tdrmz8';
 
   async removeBackground(imageDataUrl: string): Promise<string> {
     try {
