@@ -191,9 +191,6 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({
       const targetWidth = 200 * imageScale * scale;
       const imgScale = targetWidth / ((existingHeadshot as any).width || 1);
       
-      // Get current position or calculate new center
-      const currentLeft = existingHeadshot.left || 0;
-      const currentTop = existingHeadshot.top || 0;
       
       // Only recenter if it's at the default position (hasn't been moved by user)
       const isAtDefaultPosition = !existingHeadshot.get('hasMoved');
