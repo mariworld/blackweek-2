@@ -100,6 +100,50 @@ function App() {
               className="h-12 sm:h-16 lg:h-20 w-auto"
             />
           </div>
+          
+          <div className="max-w-3xl mx-auto mt-6 mb-4 text-center">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-3">
+              Welcome to the BLACKWEEK Meme Generator
+            </h1>
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+              This is your chance to create a ForTheCulture profile pic that radiates big BLACKWEEK energy.
+            </p>
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed mt-2">
+              Think of it as your digital calling card made to stand out on LinkedIn, IG, TikTok.
+            </p>
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed mt-2">
+              Or wherever you want the world to see you.
+            </p>
+            <div className="mt-8 max-w-2xl mx-auto bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border border-yellow-700/50 rounded-xl p-6 shadow-2xl">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-8 h-8 bg-yellow-500 text-black rounded-full flex items-center justify-center font-bold text-sm">1</span>
+                  <p className="text-gray-100 text-sm sm:text-base text-left flex-1">
+                    <span className="font-bold text-white">Choose your best headshot</span>
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-8 h-8 bg-yellow-500 text-black rounded-full flex items-center justify-center font-bold text-sm">2</span>
+                  <p className="text-gray-100 text-sm sm:text-base text-left flex-1">
+                    <span className="font-bold text-white">Pick your Emoji(s).</span> Choose 5 emojis that capture your vibe, your story, your energy.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-8 h-8 bg-yellow-500 text-black rounded-full flex items-center justify-center font-bold text-sm">3</span>
+                  <p className="text-gray-100 text-sm sm:text-base text-left flex-1">
+                    <span className="font-bold text-white">Watch your headshot transform</span> into a one-of-a-kind BLACKWEEK visual that represents YOU.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="mt-6 text-center border-t border-yellow-700/30 pt-4">
+                <p className="text-yellow-300 font-bold text-base sm:text-lg">
+                  Ready to show out? Let's go! 🚀
+                </p>
+              </div>
+            </div>
+          </div>
+          
           {!config.REPLICATE_API_KEY && (
             <p className="text-xs text-yellow-500 mt-2">
               Using local sketch filter (Replicate API key not configured)
@@ -123,7 +167,7 @@ function App() {
           <div className="space-y-6">
             <div className="border border-gray-800 rounded-lg shadow-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-white">
-                Step 1: Create Your Portrait
+                Step 1: Choose your best headshot 
               </h2>
               
               {/* Upload Image */}
@@ -268,7 +312,7 @@ function App() {
 
             <div className="border border-gray-800 rounded-lg shadow-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-white">
-                Step 2: Add Emojis ({selectedEmojis.length}/5)
+                Step 2: Pick your Emoji(s). Choose 5 emojis that capture your vibe, your story, your energy ({selectedEmojis.length}/5)
               </h2>
               <EmojiPicker
                 selectedEmojis={selectedEmojis}
