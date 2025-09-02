@@ -1,5 +1,5 @@
 export class BackgroundRemovalService {
-  private cloudName: string = 'dj5tdrmz8';
+  private cloudName: string = 'dqkooog11';
 
   async removeBackground(imageDataUrl: string): Promise<string> {
     const startTime = Date.now();
