@@ -133,7 +133,6 @@ app.post('/api/transform-image', async (req, res) => {
       }
 
       console.log(`Processing image with FLUX Kontext Pro (attempt ${retryCount + 1}/${maxRetries + 1})...`);
-      console.log('API Key available:', !!process.env.VITE_REPLICATE_API_KEY);
 
       // Preprocess image to reduce memory usage
       let processedImageData;
@@ -432,9 +431,6 @@ app.post('/api/replicate-webhook', async (req, res) => {
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
-  console.log(`Backend server accessible on network at http://[YOUR_IP]:${PORT}`);
-  console.log(`API key configured: ${!!process.env.VITE_REPLICATE_API_KEY}`);
   
   // Show network interfaces
   const os = require('os');

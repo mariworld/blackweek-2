@@ -52,7 +52,6 @@ export default async function handler(req, res) {
     console.log('[Cloudinary API] Base64 data prepared, size:', base64Data.length, 'characters');
     
     // Upload directly using the upload API with base64
-    console.log('[Cloudinary API] Uploading to Cloudinary cloud:', cloudName);
     const uploadStartTime = Date.now();
     const uploadResponse = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,

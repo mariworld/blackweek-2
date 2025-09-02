@@ -45,7 +45,6 @@ export default async function handler(req, res) {
       }
 
       console.log(`Processing image with FLUX Kontext Pro (attempt ${retryCount + 1}/${maxRetries + 1})...`);
-      console.log('API Key available:', !!process.env.VITE_REPLICATE_API_KEY);
 
       // Create prediction using FLUX Kontext Pro
       const prediction = await replicate.predictions.create({

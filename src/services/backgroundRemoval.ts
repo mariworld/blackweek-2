@@ -42,12 +42,6 @@ export class BackgroundRemovalService {
       }
 
       const uploadData = await uploadResponse.json();
-      console.log('[Cloudinary BG Removal] ✅ Upload successful:', {
-        publicId: uploadData.public_id,
-        format: uploadData.format,
-        bytes: uploadData.bytes,
-        url: uploadData.secure_url
-      });
       
       const publicId = uploadData.public_id;
       

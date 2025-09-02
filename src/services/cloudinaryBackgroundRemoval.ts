@@ -21,7 +21,6 @@ export class CloudinaryBackgroundRemovalService {
       return imageDataUrl;
     }
 
-    console.log('[Cloudinary Client] Credentials validated, cloud name:', this.cloudName);
 
     try {
       const startTime = Date.now();
