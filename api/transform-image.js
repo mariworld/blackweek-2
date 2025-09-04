@@ -1,8 +1,14 @@
 import Replicate from 'replicate';
 
-// Initialize Replicate
+// Initialize Replicate with better error handling
+const apiKey = process.env.VITE_REPLICATE_API_KEY || process.env.REPLICATE_API_KEY;
+
+if (!apiKey) {
+  console.error('ERROR: No Replicate API key found in environment variables');
+}
+
 const replicate = new Replicate({
-  auth: process.env.VITE_REPLICATE_API_KEY,
+  auth: apiKey,
 });
 
 // Helper function to check if error is CUDA memory related
@@ -14,6 +20,10 @@ function isCudaMemoryError(error) {
 }
 
 export default async function handler(req, res) {
+  console.log('Transform-image handler called');
+  console.log('API Key exists:', !!apiKey);
+  console.log('Request method:', req.method);
+  
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,6 +40,15 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Check if API key is configured
+  if (!apiKey) {
+    console.error('No API key configured');
+    return res.status(500).json({ 
+      error: 'Server configuration error', 
+      details: 'Replicate API key not configured' 
+    });
   }
 
   let retryCount = 0;
