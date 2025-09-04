@@ -55,7 +55,7 @@ export class ReplicateService {
         ? `${Math.round(aspectRatio * 16)}:9` 
         : `9:${Math.round(16 / aspectRatio)}`;
       
-      // Call our backend endpoint
+      // Call our backend endpoint here
       const response = await fetch(`${this.backendUrl}/api/transform-image`, {
         method: 'POST',
         headers: {
